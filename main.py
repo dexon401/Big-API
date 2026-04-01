@@ -17,10 +17,17 @@ WINDOW_HEIGHT = 720
 WINDOW_TITLE = "MAP"
 MAP_FILE = "map.png"
 
+MAX_SPN = 10
+MIN_SPN = 0.002
+
 
 class GameView(arcade.Window):
     def setup(self):
-        self.get_image()
+        self.lat, self.lon = 55.75105603488043, 37.61748581976496
+        self.spn = [0.3, 0.3]
+        
+        self.update_image()
+
 
     def on_draw(self):
         self.clear()
@@ -35,14 +42,11 @@ class GameView(arcade.Window):
             ),
         )
 
-    def get_image(self):
-        lat, lon = 55.75105603488043, 37.61748581976496
-        spn_lat, spn_lon = 0.3, 0.3
-        
+    def update_image(self):
         params = {
             "apikey": STATIC_MAPS_API_KEY,
-            "ll": f"{lon},{lat}",
-            "spn": f"{spn_lon},{spn_lat}"
+            "ll": f"{self.lon},{self.lat}",
+            "spn": ",".join(map(str,self.spn))
         }
         response = requests.get(STATIC_MAPS_URL, params=params)
 
@@ -54,6 +58,28 @@ class GameView(arcade.Window):
             file.write(response.content)
 
         self.background = arcade.load_texture(MAP_FILE)
+        
+        self.on_draw()
+        
+    def on_key_press(self, symbol, modifiers):
+        changed = False
+        if symbol == arcade.key.PAGEUP:
+            new_spn = [min(MAX_SPN, x * 2) for x in self.spn]
+            if new_spn != self.spn:
+                self.spn = new_spn
+                changed = True
+        elif symbol == arcade.key.PAGEDOWN:
+            new_spn = [max(MIN_SPN, x * 0.5) for x in self.spn]
+            if new_spn != self.spn:
+                self.spn = new_spn
+                changed = True
+
+        if changed:
+            print("Changing...")
+            self.update_image()
+            
+        
+        return super().on_key_press(symbol, modifiers)
 
 
 def main():

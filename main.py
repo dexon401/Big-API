@@ -3,6 +3,15 @@ import sys
 import requests
 import arcade
 
+STATIC_MAPS_API_KEY = "f3a0fe3a-b07e-4840-a1da-06f18b2ddf13"
+STATIC_MAPS_URL = "https://static-maps.yandex.ru/v1"
+
+GEOCODER_API_KEY = "8013b162-6b42-4997-9691-77b7074026e0"
+GEOCODER_URL = "https://geocode-maps.yandex.ru/v1"
+
+SEARCH_MAPS_API_KEY = "dda3ddba-c9ea-4ead-9010-f43fbc15c6e3"
+SEARCH_MAPS_URL = "https://search-maps.yandex.ru/v1"
+
 WINDOW_WIDTH = 1280
 WINDOW_HEIGHT = 720
 WINDOW_TITLE = "MAP"
@@ -22,26 +31,25 @@ class GameView(arcade.Window):
                 (self.width - self.background.width) // 2,
                 (self.height - self.background.height) // 2,
                 self.background.width,
-                self.background.height
+                self.background.height,
             ),
         )
 
     def get_image(self):
-        server_address = 'https://static-maps.yandex.ru/v1?'
-        api_key = 'f3a0fe3a-b07e-4840-a1da-06f18b2ddf13'
-        ll_spn = 'll=134.3548,-25.6101&spn=25,25'
-        # Готовим запрос.
-
-        map_request = f"{server_address}{ll_spn}&apikey={api_key}"
-        response = requests.get(map_request)
+        lat, lon = 55.75105603488043, 37.61748581976496
+        spn_lat, spn_lon = 0.3, 0.3
+        
+        params = {
+            "apikey": STATIC_MAPS_API_KEY,
+            "ll": f"{lon},{lat}",
+            "spn": f"{spn_lon},{spn_lat}"
+        }
+        response = requests.get(STATIC_MAPS_URL, params=params)
 
         if not response:
-            print("Ошибка выполнения запроса:")
-            print(map_request)
             print("Http статус:", response.status_code, "(", response.reason, ")")
             sys.exit(1)
 
-        # Запишем полученное изображение в файл.
         with open(MAP_FILE, "wb") as file:
             file.write(response.content)
 
@@ -52,7 +60,6 @@ def main():
     gameview = GameView(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE)
     gameview.setup()
     arcade.run()
-    # Удаляем за собой файл с изображением.
     os.remove(MAP_FILE)
 
 
